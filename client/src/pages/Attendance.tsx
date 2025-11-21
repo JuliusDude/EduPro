@@ -12,14 +12,14 @@ const Attendance = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+      <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-colors duration-300">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Attendance Tracker</h1>
-          <p className="text-sm text-slate-500">Manage your attendance and track your eligibility.</p>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Attendance Tracker</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Manage your attendance and track your eligibility.</p>
         </div>
 
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100 transition-colors font-medium text-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-medium text-sm">
             <Filter className="w-4 h-4" />
             Filter
           </button>
