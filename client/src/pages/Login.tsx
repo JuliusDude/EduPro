@@ -34,7 +34,7 @@ const Login = () => {
         // Navigate based on role
         switch (selectedRole) {
           case 'student':
-            navigate('/');
+            navigate('/student/dashboard');
             break;
           case 'lecturer':
             navigate('/lecturer');
@@ -85,8 +85,8 @@ const Login = () => {
                   type="button"
                   onClick={() => setSelectedRole(role.id as any)}
                   className={`p-4 rounded-xl border-2 transition-all ${isSelected
-                      ? `border-${role.color}-600 bg-${role.color}-50 dark:bg-${role.color}-900/20`
-                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                    ? `border-${role.color}-600 bg-${role.color}-50 dark:bg-${role.color}-900/20`
+                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                     }`}
                 >
                   <Icon className={`w-6 h-6 mx-auto mb-2 ${isSelected ? `text-${role.color}-600 dark:text-${role.color}-400` : 'text-slate-400'

@@ -1,6 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
+import RoleGuard from './components/RoleGuard';
 import Dashboard from './pages/Dashboard';
 import Attendance from './pages/Attendance';
 import Assignments from './pages/Assignments';
@@ -18,6 +19,14 @@ import LecturerAssignments from './pages/lecturer/LecturerAssignments';
 import LecturerAssignmentDetails from './pages/lecturer/LecturerAssignmentDetails';
 import LecturerStudents from './pages/lecturer/LecturerStudents';
 
+// Admin pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminCourses from './pages/admin/AdminCourses';
+import AdminDepartments from './pages/admin/AdminDepartments';
+import AdminCalendar from './pages/admin/AdminCalendar';
+import AdminReports from './pages/admin/AdminReports';
+
 function App() {
   const { isAuthenticated, user } = useAuth();
 
@@ -26,11 +35,11 @@ function App() {
     if (!user) return '/login';
     switch (user.role) {
       case 'student':
-        return '/';
+        return '/student/dashboard';
       case 'lecturer':
-        return '/lecturer';
+        return '/lecturer/dashboard';
       case 'admin':
-        return '/admin';
+        return '/admin/dashboard';
       default:
         return '/login';
     }
@@ -43,22 +52,44 @@ function App() {
       } />
 
       {/* Student Routes */}
-      <Route path="/" element={
-        isAuthenticated && user?.role === 'student' ? <Layout /> : <Navigate to="/login" />
+      <Route path="/student" element={
+        <RoleGuard allowedRoles={['student']}>
+          <Layout role="student">
+            <Outlet />
+          </Layout>
+        </RoleGuard>
       }>
-        <Route index element={<Dashboard />} />
+        <Route index element={<Navigate to="/student/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="timetable" element={<Timetable />} />
-        <Route path="courses" element={<CourseInfo />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="assignments" element={<Assignments />} />
+        <Route path="courses" element={<CourseInfo />} />
         <Route path="notes" element={<Notes />} />
       </Route>
 
+      {/* Root Redirect */}
+      <Route path="/" element={
+        isAuthenticated ? (
+          user?.role === 'student' ? <Navigate to="/student/dashboard" replace /> :
+            user?.role === 'lecturer' ? <Navigate to="/lecturer/dashboard" replace /> :
+              user?.role === 'admin' ? <Navigate to="/admin/dashboard" replace /> :
+                <Navigate to="/login" replace />
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      } />
+
       {/* Lecturer Routes */}
       <Route path="/lecturer" element={
-        isAuthenticated && user?.role === 'lecturer' ? <Layout /> : <Navigate to="/login" />
+        <RoleGuard allowedRoles={['lecturer']}>
+          <Layout role="lecturer">
+            <Outlet />
+          </Layout>
+        </RoleGuard>
       }>
-        <Route index element={<LecturerDashboard />} />
+        <Route index element={<Navigate to="/lecturer/dashboard" replace />} />
+        <Route path="dashboard" element={<LecturerDashboard />} />
         <Route path="courses" element={<LecturerCourses />} />
         <Route path="courses/:id" element={<LecturerCourseDetails />} />
         <Route path="attendance" element={<LecturerAttendance />} />
@@ -67,11 +98,21 @@ function App() {
         <Route path="students" element={<LecturerStudents />} />
       </Route>
 
-      {/* Admin Routes (placeholder) */}
+      {/* Admin Routes */}
       <Route path="/admin" element={
-        isAuthenticated && user?.role === 'admin' ? <Layout /> : <Navigate to="/login" />
+        <RoleGuard allowedRoles={['admin']}>
+          <Layout role="admin">
+            <Outlet />
+          </Layout>
+        </RoleGuard>
       }>
-        <Route index element={<div className="p-8 text-slate-900 dark:text-white">Admin Dashboard - Coming Soon</div>} />
+        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="courses" element={<AdminCourses />} />
+        <Route path="departments" element={<AdminDepartments />} />
+        <Route path="calendar" element={<AdminCalendar />} />
+        <Route path="reports" element={<AdminReports />} />
       </Route>
 
       {/* Fallback */}

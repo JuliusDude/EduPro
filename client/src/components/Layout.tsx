@@ -7,7 +7,12 @@ import { Sun, Moon, LogOut } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import ProfileModal from './ProfileModal';
 
-const Layout = () => {
+interface LayoutProps {
+    role?: 'student' | 'lecturer' | 'admin';
+    children?: React.ReactNode;
+}
+
+const Layout = ({ role, children }: LayoutProps) => {
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -23,7 +28,7 @@ const Layout = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-            <Sidebar />
+            <Sidebar role={role} />
 
             <main className="ml-64 min-h-screen flex flex-col">
                 {/* Top Header */}
@@ -68,7 +73,7 @@ const Layout = () => {
 
                 {/* Page Content */}
                 <div className="flex-1 p-8 overflow-y-auto">
-                    <Outlet />
+                    {children || <Outlet />}
                 </div>
             </main>
 

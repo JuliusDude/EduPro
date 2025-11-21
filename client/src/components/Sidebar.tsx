@@ -10,29 +10,34 @@ import {
     Calendar,
     Users,
     ClipboardList,
-    Settings,
-    BarChart
+    BarChart,
+    Building2
 } from 'lucide-react';
 
-const Sidebar = () => {
+interface SidebarProps {
+    role?: 'student' | 'lecturer' | 'admin';
+}
+
+const Sidebar = ({ role: propRole }: SidebarProps) => {
     const { user } = useAuth();
+    const role = propRole || user?.role;
 
     // Role-based navigation
     const getNavItems = () => {
-        switch (user?.role) {
+        switch (role) {
             case 'student':
                 return [
-                    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-                    { path: '/timetable', icon: Calendar, label: 'Timetable' },
-                    { path: '/courses', icon: Book, label: 'Course Info' },
-                    { path: '/attendance', icon: CheckSquare, label: 'Attendance' },
-                    { path: '/assignments', icon: BookOpen, label: 'Assignments' },
-                    { path: '/notes', icon: FileText, label: 'Notes & Resources' },
+                    { path: '/student/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+                    { path: '/student/timetable', icon: Calendar, label: 'Timetable' },
+                    { path: '/student/courses', icon: Book, label: 'Course Info' },
+                    { path: '/student/attendance', icon: CheckSquare, label: 'Attendance' },
+                    { path: '/student/assignments', icon: BookOpen, label: 'Assignments' },
+                    { path: '/student/notes', icon: FileText, label: 'Notes & Resources' },
                 ];
 
             case 'lecturer':
                 return [
-                    { path: '/lecturer', icon: LayoutDashboard, label: 'Dashboard' },
+                    { path: '/lecturer/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
                     { path: '/lecturer/courses', icon: Book, label: 'My Courses' },
                     { path: '/lecturer/attendance', icon: CheckSquare, label: 'Attendance' },
                     { path: '/lecturer/assignments', icon: ClipboardList, label: 'Assignments' },
@@ -41,11 +46,12 @@ const Sidebar = () => {
 
             case 'admin':
                 return [
-                    { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+                    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
                     { path: '/admin/users', icon: Users, label: 'Users' },
                     { path: '/admin/courses', icon: Book, label: 'Courses' },
+                    { path: '/admin/departments', icon: Building2, label: 'Departments' },
+                    { path: '/admin/calendar', icon: Calendar, label: 'Calendar' },
                     { path: '/admin/reports', icon: BarChart, label: 'Reports' },
-                    { path: '/admin/settings', icon: Settings, label: 'Settings' },
                 ];
 
             default:
