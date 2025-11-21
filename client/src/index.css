@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Outfit', system-ui, sans-serif;
+  
+  /* Premium Academic Palette */
+  --color-primary: #4F46E5; /* Indigo 600 */
+  --color-primary-hover: #4338CA; /* Indigo 700 */
+  --color-secondary: #64748B; /* Slate 500 */
+  
+  --color-success: #10B981; /* Emerald 500 */
+  --color-warning: #F59E0B; /* Amber 500 */
+  --color-danger: #EF4444; /* Red 500 */
+  
+  --color-background: #F8FAFC; /* Slate 50 */
+  --color-surface: #FFFFFF;
+  --color-surface-glass: rgba(255, 255, 255, 0.7);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-slate-900 font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-surface-glass backdrop-blur-md border border-white/20 shadow-sm;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+  }
+}
