@@ -1,0 +1,156 @@
+{
+    "courses": [
+        {
+            "courseName": "CSE - Core Computer Science",
+            "courseCode": "CSE-CS",
+            "semester": 3,
+            "weeks": 18,
+            "subjects": [
+                {
+                    "code": "CS301",
+                    "name": "Data Structures",
+                    "weeklyHours": 4,
+                    "totalHours": 72
+                },
+                {
+                    "code": "CS302",
+                    "name": "Operating Systems",
+                    "weeklyHours": 4,
+                    "totalHours": 72
+                },
+                {
+                    "code": "CS303",
+                    "name": "Database Systems",
+                    "weeklyHours": 3,
+                    "totalHours": 54
+                },
+                {
+                    "code": "CS304",
+                    "name": "Computer Networks",
+                    "weeklyHours": 3,
+                    "totalHours": 54
+                },
+                {
+                    "code": "CS305",
+                    "name": "Discrete Mathematics",
+                    "weeklyHours": 3,
+                    "totalHours": 54
+                }
+            ]
+        },
+        {
+            "courseName": "CSE - Artificial Intelligence",
+            "courseCode": "CSE-AI",
+            "semester": 4,
+            "weeks": 16,
+            "subjects": [
+                {
+                    "code": "AI401",
+                    "name": "Machine Learning",
+                    "weeklyHours": 4,
+                    "totalHours": 64
+                },
+                {
+                    "code": "AI402",
+                    "name": "Neural Networks",
+                    "weeklyHours": 3,
+                    "totalHours": 48
+                },
+                {
+                    "code": "AI403",
+                    "name": "Probability & Statistics",
+                    "weeklyHours": 3,
+                    "totalHours": 48
+                },
+                {
+                    "code": "AI404",
+                    "name": "Data Mining",
+                    "weeklyHours": 3,
+                    "totalHours": 48
+                },
+                {
+                    "code": "AI405",
+                    "name": "AI Algorithms",
+                    "weeklyHours": 4,
+                    "totalHours": 64
+                }
+            ]
+        },
+        {
+            "courseName": "CSE - Cyber Security",
+            "courseCode": "CSE-CY",
+            "semester": 4,
+            "weeks": 16,
+            "subjects": [
+                {
+                    "code": "CY401",
+                    "name": "Network Security",
+                    "weeklyHours": 4,
+                    "totalHours": 64
+                },
+                {
+                    "code": "CY402",
+                    "name": "Ethical Hacking",
+                    "weeklyHours": 3,
+                    "totalHours": 48
+                },
+                {
+                    "code": "CY403",
+                    "name": "Cryptography",
+                    "weeklyHours": 4,
+                    "totalHours": 64
+                },
+                {
+                    "code": "CY404",
+                    "name": "Digital Forensics",
+                    "weeklyHours": 3,
+                    "totalHours": 48
+                },
+                {
+                    "code": "CY405",
+                    "name": "Cyber Law & Policy",
+                    "weeklyHours": 2,
+                    "totalHours": 32
+                }
+            ]
+        },
+        {
+            "courseName": "CSE - Data Science",
+            "courseCode": "CSE-DS",
+            "semester": 5,
+            "weeks": 18,
+            "subjects": [
+                {
+                    "code": "DS501",
+                    "name": "Big Data Analytics",
+                    "weeklyHours": 4,
+                    "totalHours": 72
+                },
+                {
+                    "code": "DS502",
+                    "name": "Data Visualization",
+                    "weeklyHours": 3,
+                    "totalHours": 54
+                },
+                {
+                    "code": "DS503",
+                    "name": "Statistical Modeling",
+                    "weeklyHours": 4,
+                    "totalHours": 72
+                },
+                {
+                    "code": "DS504",
+                    "name": "Python for Data Science",
+                    "weeklyHours": 3,
+                    "totalHours": 54
+                },
+                {
+                    "code": "DS505",
+                    "name": "Cloud Data Platforms",
+                    "weeklyHours": 3,
+                    "totalHours": 54
+                }
+            ]
+        }
+    ]
+}
