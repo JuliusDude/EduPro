@@ -1,29 +1,29 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Attendance from './pages/Attendance';
 import Assignments from './pages/Assignments';
 import Notes from './pages/Notes';
 import Login from './pages/Login';
+import CourseInfo from './pages/CourseInfo';
 
 function App() {
-  // TODO: Add AuthContext check here
-  const isAuthenticated = true;
+  const [isAuthenticated] = useState(true);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+    <Routes>
+      <Route path="/login" element={<Login />} />
 
-        <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
-          <Route index element={<Dashboard />} />
-          <Route path="attendance" element={<Attendance />} />
-          <Route path="assignments" element={<Assignments />} />
-          <Route path="notes" element={<Notes />} />
-        </Route>
-      </Routes>
-    </Router>
+      {/* Protected Routes */}
+      <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
+        <Route index element={<Dashboard />} />
+        <Route path="courses" element={<CourseInfo />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="assignments" element={<Assignments />} />
+        <Route path="notes" element={<Notes />} />
+      </Route>
+    </Routes>
   );
 }
 

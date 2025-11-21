@@ -1,10 +1,11 @@
-import React from 'react';
+
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, BookOpen, FileText, LogOut, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, FileText, LogOut, GraduationCap, Book } from 'lucide-react';
 
 const Sidebar = () => {
     const navItems = [
         { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/courses', icon: Book, label: 'Course Info' },
         { path: '/attendance', icon: CheckSquare, label: 'Attendance' },
         { path: '/assignments', icon: BookOpen, label: 'Assignments' },
         { path: '/notes', icon: FileText, label: 'Notes & Resources' },
