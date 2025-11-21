@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useTheme } from '../context/ThemeContext';
-import { Bell, Sun, Moon } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
+import NotificationDropdown from './NotificationDropdown';
+import ProfileModal from './ProfileModal';
 
 const Layout = () => {
     const { theme, toggleTheme } = useTheme();
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
@@ -23,14 +26,14 @@ const Layout = () => {
                             {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                         </button>
 
-                        <button className="relative p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                        </button>
+                        <NotificationDropdown />
 
                         <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
 
-                        <div className="flex items-center gap-3 pl-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 p-1 pr-3 rounded-full transition-all">
+                        <button
+                            onClick={() => setIsProfileModalOpen(true)}
+                            className="flex items-center gap-3 pl-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 p-1 pr-3 rounded-full transition-all"
+                        >
                             <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-sm">
                                 JD
                             </div>
@@ -38,7 +41,7 @@ const Layout = () => {
                                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 leading-none">John Doe</p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Computer Science</p>
                             </div>
-                        </div>
+                        </button>
                     </div>
                 </header>
 
@@ -47,6 +50,12 @@ const Layout = () => {
                     <Outlet />
                 </div>
             </main>
+
+            {/* Profile Modal */}
+            <ProfileModal
+                isOpen={isProfileModalOpen}
+                onClose={() => setIsProfileModalOpen(false)}
+            />
         </div>
     );
 };

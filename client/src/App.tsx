@@ -7,6 +7,7 @@ import Assignments from './pages/Assignments';
 import Notes from './pages/Notes';
 import Login from './pages/Login';
 import CourseInfo from './pages/CourseInfo';
+import Timetable from './pages/Timetable';
 
 function App() {
   const [isAuthenticated] = useState(true);
@@ -18,6 +19,7 @@ function App() {
       {/* Protected Routes */}
       <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
         <Route index element={<Dashboard />} />
+        <Route path="timetable" element={<Timetable />} />
         <Route path="courses" element={<CourseInfo />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="assignments" element={<Assignments />} />

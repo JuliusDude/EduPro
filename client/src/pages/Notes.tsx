@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import ChatInterface from '../components/ChatInterface';
+import UploadNotesModal from '../components/UploadNotesModal';
 import { Folder, FileText, MoreVertical, Upload, Search } from 'lucide-react';
 
 const Notes = () => {
   const [activeTab, setActiveTab] = useState<'files' | 'chat'>('files');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const folders = [
     { id: 1, name: 'Data Structures', files: 12, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20' },
@@ -26,7 +28,10 @@ const Notes = () => {
             <h1 className="text-xl font-bold text-slate-900 dark:text-white">Notes & Resources</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">Manage your course materials.</p>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none">
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none"
+          >
             <Upload className="w-4 h-4" />
             Upload
           </button>
@@ -86,6 +91,13 @@ const Notes = () => {
       <div className="w-full lg:w-96 shrink-0">
         <ChatInterface />
       </div>
+
+      {/* Upload Modal */}
+      <UploadNotesModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        existingFolders={folders}
+      />
     </div>
   );
 };
