@@ -11,7 +11,8 @@ import {
     Users,
     ClipboardList,
     BarChart,
-    Building2
+    Building2,
+    Megaphone
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -41,6 +42,7 @@ const Sidebar = ({ role: propRole }: SidebarProps) => {
                     { path: '/lecturer/courses', icon: Book, label: 'My Courses' },
                     { path: '/lecturer/attendance', icon: CheckSquare, label: 'Attendance' },
                     { path: '/lecturer/assignments', icon: ClipboardList, label: 'Assignments' },
+                    { path: '/lecturer/announcements', icon: Megaphone, label: 'Announcements' },
                     { path: '/lecturer/students', icon: Users, label: 'Students' },
                 ];
 

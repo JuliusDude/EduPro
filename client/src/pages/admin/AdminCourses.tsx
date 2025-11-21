@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Search, Filter, Plus, MoreVertical, BookOpen, Users, Calendar, Clock, Edit2, Trash2 } from 'lucide-react';
+import AddCourseModal from '../../components/admin/AddCourseModal';
 
 const AdminCourses = () => {
     const [activeTab, setActiveTab] = useState<'all' | 'active' | 'archived'>('all');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    const courses = [
+    const [courses, setCourses] = useState([
         {
             id: 1,
             code: 'CS-301',
@@ -49,7 +51,15 @@ const AdminCourses = () => {
             semester: 'Spring 2024',
             status: 'archived'
         }
-    ];
+    ]);
+
+    const handleAddCourse = (newCourse: any) => {
+        const course = {
+            id: courses.length + 1,
+            ...newCourse
+        };
+        setCourses([course, ...courses]);
+    };
 
     const filteredCourses = activeTab === 'all' ? courses : courses.filter(course => course.status === activeTab);
 
@@ -61,7 +71,10 @@ const AdminCourses = () => {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Course Management</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Create and manage academic courses</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none">
+                <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none"
+                >
                     <Plus className="w-4 h-4" />
                     Create Course
                 </button>
@@ -76,8 +89,8 @@ const AdminCourses = () => {
                                 key={tab}
                                 onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${activeTab === tab
-                                        ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                                     }`}
                             >
                                 {tab}
@@ -162,6 +175,12 @@ const AdminCourses = () => {
                     </div>
                 ))}
             </div>
+
+            <AddCourseModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onAdd={handleAddCourse}
+            />
         </div>
     );
 };

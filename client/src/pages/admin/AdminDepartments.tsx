@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Search, Plus, MoreVertical, Building2, Users, BookOpen, Edit2, Trash2, ArrowRight } from 'lucide-react';
+import AddDepartmentModal from '../../components/admin/AddDepartmentModal';
 
 const AdminDepartments = () => {
-    const departments = [
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+    const [departments, setDepartments] = useState([
         {
             id: 1,
             name: 'Computer Science',
@@ -39,7 +42,15 @@ const AdminDepartments = () => {
             lecturers: 20,
             description: 'Management, Finance, and Marketing'
         }
-    ];
+    ]);
+
+    const handleAddDepartment = (newDepartment: any) => {
+        const department = {
+            id: departments.length + 1,
+            ...newDepartment
+        };
+        setDepartments([department, ...departments]);
+    };
 
     return (
         <div className="space-y-6">
@@ -49,7 +60,10 @@ const AdminDepartments = () => {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Departments</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage academic departments and faculties</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none">
+                <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none"
+                >
                     <Plus className="w-4 h-4" />
                     Add Department
                 </button>
@@ -129,6 +143,12 @@ const AdminDepartments = () => {
                     </div>
                 ))}
             </div>
+
+            <AddDepartmentModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onAdd={handleAddDepartment}
+            />
         </div>
     );
 };

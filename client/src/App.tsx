@@ -18,6 +18,7 @@ import LecturerCourseDetails from './pages/lecturer/LecturerCourseDetails';
 import LecturerAssignments from './pages/lecturer/LecturerAssignments';
 import LecturerAssignmentDetails from './pages/lecturer/LecturerAssignmentDetails';
 import LecturerStudents from './pages/lecturer/LecturerStudents';
+import LecturerAnnouncements from './pages/lecturer/LecturerAnnouncements';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -96,6 +97,7 @@ function App() {
         <Route path="assignments" element={<LecturerAssignments />} />
         <Route path="assignments/:id" element={<LecturerAssignmentDetails />} />
         <Route path="students" element={<LecturerStudents />} />
+        <Route path="announcements" element={<LecturerAnnouncements />} />
       </Route>
 
       {/* Admin Routes */}

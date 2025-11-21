@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Search, Filter, Plus, MoreVertical, Mail, Phone, Shield, Trash2, Edit2, CheckCircle, XCircle } from 'lucide-react';
+import AddUserModal from '../../components/admin/AddUserModal';
 
 const AdminUsers = () => {
     const [activeTab, setActiveTab] = useState<'all' | 'student' | 'lecturer' | 'admin'>('all');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    const users = [
+    const [users, setUsers] = useState([
         {
             id: 1,
             name: 'John Doe',
@@ -41,7 +43,15 @@ const AdminUsers = () => {
             department: 'Mathematics',
             joinDate: '2024-02-01'
         }
-    ];
+    ]);
+
+    const handleAddUser = (newUser: any) => {
+        const user = {
+            id: users.length + 1,
+            ...newUser
+        };
+        setUsers([user, ...users]);
+    };
 
     const filteredUsers = activeTab === 'all' ? users : users.filter(user => user.role === activeTab);
 
@@ -53,7 +63,10 @@ const AdminUsers = () => {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">User Management</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage system users and permissions</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none">
+                <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none"
+                >
                     <Plus className="w-4 h-4" />
                     Add User
                 </button>
@@ -68,8 +81,8 @@ const AdminUsers = () => {
                                 key={tab}
                                 onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize whitespace-nowrap ${activeTab === tab
-                                        ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                                     }`}
                             >
                                 {tab}s
@@ -163,6 +176,12 @@ const AdminUsers = () => {
                     </table>
                 </div>
             </div>
+
+            <AddUserModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onAdd={handleAddUser}
+            />
         </div>
     );
 };
