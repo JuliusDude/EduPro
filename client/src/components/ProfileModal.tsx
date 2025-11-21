@@ -1,5 +1,6 @@
-import { X, Camera, Mail, Phone, Hash, Calendar, MapPin, Edit2 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { X, Camera, Mail, Phone, Hash, Calendar, MapPin, Edit2, Briefcase } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -7,22 +8,41 @@ interface ProfileModalProps {
 }
 
 const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
+    const { user } = useAuth();
     const [profileImage, setProfileImage] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [profileData, setProfileData] = useState({
-        firstName: 'John',
-        lastName: 'Doe',
-        studentId: 'CS2024001',
-        email: 'john.doe@university.edu',
-        phone: '+1 (555) 123-4567',
-        department: 'Computer Science',
-        semester: '6th Semester',
-        enrollmentYear: '2021',
-        dateOfBirth: '2003-05-15',
-        address: '123 University Ave, Campus City, ST 12345'
+        firstName: '',
+        lastName: '',
+        id: '',
+        email: '',
+        phone: '',
+        department: '',
+        semester: '',
+        enrollmentYear: '',
+        dateOfBirth: '',
+        address: ''
     });
+
+    // Sync with AuthContext user when modal opens or user changes
+    useEffect(() => {
+        if (user) {
+            setProfileData({
+                firstName: user.firstName,
+                lastName: user.lastName,
+                id: user.id,
+                email: user.email,
+                phone: '+1 (555) 123-4567', // Mock phone
+                department: user.department || '',
+                semester: user.role === 'student' ? '6th Semester' : '',
+                enrollmentYear: '2021',
+                dateOfBirth: '1990-05-15', // Mock DOB
+                address: '123 University Ave, Campus City, ST 12345' // Mock Address
+            });
+        }
+    }, [user, isOpen]);
 
     if (!isOpen) return null;
 
@@ -41,6 +61,8 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
         console.log('Saving profile data:', profileData);
         setIsEditing(false);
     };
+
+    const isStudent = user?.role === 'student';
 
     return (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -90,7 +112,15 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                         <h3 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">
                             {profileData.firstName} {profileData.lastName}
                         </h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{profileData.department}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${user?.role === 'student' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' :
+                                    user?.role === 'lecturer' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                                        'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
+                                }`}>
+                                {user?.role}
+                            </span>
+                            <span className="text-sm text-slate-500 dark:text-slate-400">{profileData.department}</span>
+                        </div>
                     </div>
 
                     {/* Edit Toggle */}
@@ -123,13 +153,13 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
 
                     {/* Information Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Student ID */}
+                        {/* ID */}
                         <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
                                 <Hash className="w-3.5 h-3.5" />
-                                Student ID
+                                {isStudent ? 'Student ID' : 'Employee ID'}
                             </div>
-                            <p className="text-slate-900 dark:text-white font-semibold">{profileData.studentId}</p>
+                            <p className="text-slate-900 dark:text-white font-semibold">{profileData.id}</p>
                         </div>
 
                         {/* Email */}
@@ -182,33 +212,37 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-sm text-slate-900 dark:text-white"
                                 />
                             ) : (
-                                <p className="text-slate-900 dark:text-white font-semibold">{new Date(profileData.dateOfBirth).toLocaleDateString()}</p>
+                                <p className="text-slate-900 dark:text-white font-semibold">{profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toLocaleDateString() : 'Not set'}</p>
                             )}
                         </div>
 
                         {/* Department */}
                         <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
+                                <Briefcase className="w-3.5 h-3.5" />
                                 Department
                             </div>
                             <p className="text-slate-900 dark:text-white font-semibold">{profileData.department}</p>
                         </div>
 
-                        {/* Semester */}
-                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
-                                Current Semester
-                            </div>
-                            <p className="text-slate-900 dark:text-white font-semibold">{profileData.semester}</p>
-                        </div>
+                        {/* Student Specific Fields */}
+                        {isStudent && (
+                            <>
+                                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
+                                        Current Semester
+                                    </div>
+                                    <p className="text-slate-900 dark:text-white font-semibold">{profileData.semester}</p>
+                                </div>
 
-                        {/* Enrollment Year */}
-                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
-                                Enrollment Year
-                            </div>
-                            <p className="text-slate-900 dark:text-white font-semibold">{profileData.enrollmentYear}</p>
-                        </div>
+                                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
+                                        Enrollment Year
+                                    </div>
+                                    <p className="text-slate-900 dark:text-white font-semibold">{profileData.enrollmentYear}</p>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Address */}

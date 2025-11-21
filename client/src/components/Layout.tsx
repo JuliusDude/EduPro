@@ -2,13 +2,24 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Sun, Moon, LogOut } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import ProfileModal from './ProfileModal';
 
 const Layout = () => {
     const { theme, toggleTheme } = useTheme();
+    const { user, logout } = useAuth();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+    const handleLogout = () => {
+        logout();
+    };
+
+    const getInitials = () => {
+        if (!user) return 'U';
+        return `${user.firstName[0]}${user.lastName[0]}`;
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
@@ -35,12 +46,22 @@ const Layout = () => {
                             className="flex items-center gap-3 pl-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 p-1 pr-3 rounded-full transition-all"
                         >
                             <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-sm">
-                                JD
+                                {getInitials()}
                             </div>
                             <div className="hidden md:block text-left">
-                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 leading-none">John Doe</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Computer Science</p>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 leading-none">
+                                    {user?.firstName} {user?.lastName}
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{user?.department}</p>
                             </div>
+                        </button>
+
+                        <button
+                            onClick={handleLogout}
+                            className="p-2 text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 rounded-full transition-colors"
+                            title="Logout"
+                        >
+                            <LogOut className="w-5 h-5" />
                         </button>
                     </div>
                 </header>
