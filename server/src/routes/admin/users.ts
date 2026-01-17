@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
+import { EnrollmentStatus } from '@prisma/client';
 import prisma from '../../services/prisma';
 import { authenticate, authorize } from '../../middleware/auth';
 import { ValidationError, NotFoundError } from '../../utils/errors';
@@ -38,6 +39,12 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
                 createdAt: true,
                 lastLogin: true,
                 avatar: true,
+                lecturer: {
+                    select: {
+                        id: true
+                    }
+                },
+                student: true
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -71,7 +78,7 @@ router.post(
                 throw new ValidationError(errors.array()[0].msg);
             }
 
-            const { email, password, firstName, lastName, role, department, phone } = req.body;
+            const { email, password, firstName, lastName, role, departmentId, phone, studentId, semester } = req.body;
 
             // Check if user already exists
             const existingUser = await prisma.user.findUnique({
@@ -82,33 +89,115 @@ router.post(
                 throw new ValidationError('User with this email already exists');
             }
 
+            // Find department name if ID provided
+            let departmentName = '';
+            if (departmentId) {
+                const dept = await prisma.department.findUnique({ where: { id: departmentId } });
+                if (dept) departmentName = dept.name;
+            }
+
             const hashedPassword = await hashPassword(password);
 
-            const user = await prisma.user.create({
-                data: {
-                    email: email.toLowerCase(),
-                    password: hashedPassword,
-                    firstName,
-                    lastName,
-                    role,
-                    department,
-                    phone,
-                    status: 'ACTIVE',
-                },
+            const result = await prisma.$transaction(async (prisma) => {
+                const user = await prisma.user.create({
+                    data: {
+                        email: email.toLowerCase(),
+                        password: hashedPassword,
+                        firstName,
+                        lastName,
+                        role,
+                        department: departmentName,
+                        phone,
+                        status: 'ACTIVE',
+                    },
+                });
+
+                if (role === 'LECTURER' && departmentId) {
+                    await prisma.lecturer.create({
+                        data: {
+                            userId: user.id,
+                            departmentId: departmentId,
+                            employeeId: `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+                        }
+                    });
+                } else if (role === 'STUDENT') {
+                    const semesterInt = parseInt(semester) || 1;
+
+                    // Find courses matching department and semester
+                    const courses = await prisma.course.findMany({
+                        where: {
+                            departmentId,
+                            semester: semesterInt
+                        },
+                        include: {
+                            subjects: true
+                        }
+                    });
+
+                    // Determine courseId to link (required by Student model)
+                    let courseIdToLink = '';
+                    if (courses.length > 0) {
+                        courseIdToLink = courses[0].id;
+                    } else {
+                        // Fallback: find any course in department
+                        const anyCourse = await prisma.course.findFirst({
+                            where: { departmentId }
+                        });
+                        if (anyCourse) {
+                            courseIdToLink = anyCourse.id;
+                        } else {
+                            const randomCourse = await prisma.course.findFirst();
+                            if (randomCourse) courseIdToLink = randomCourse.id;
+                            else throw new ValidationError('Cannot create student: No courses available in the system.');
+                        }
+                    }
+
+                    const student = await prisma.student.create({
+                        data: {
+                            userId: user.id,
+                            studentId: studentId || `S${Date.now()}`,
+                            enrollmentDate: new Date(),
+                            currentSemester: semesterInt,
+                            courseId: courseIdToLink,
+                        }
+                    });
+
+                    // Auto-enroll in subjects
+                    const enrollments = [];
+                    for (const course of courses) {
+                        for (const subject of course.subjects) {
+                            enrollments.push({
+                                studentId: student.id,
+                                subjectId: subject.id,
+                                enrollmentDate: new Date(),
+                                status: EnrollmentStatus.ACTIVE
+                            });
+                        }
+                    }
+
+                    if (enrollments.length > 0) {
+                        await prisma.enrollment.createMany({
+                            data: enrollments,
+                            skipDuplicates: true
+                        });
+                    }
+                }
+
+                return user;
             });
 
-            logger.info(`Admin created new user: ${user.email} with role ${user.role}`);
+            logger.info(`Admin created new user: ${result.email} with role ${result.role}`);
 
             res.status(201).json({
                 success: true,
                 message: 'User created successfully',
                 data: {
                     user: {
-                        id: user.id,
-                        email: user.email,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        role: user.role,
+                        id: result.id,
+                        email: result.email,
+                        firstName: result.firstName,
+                        lastName: result.lastName,
+                        role: result.role,
                     },
                 },
             });

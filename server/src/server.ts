@@ -24,11 +24,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Rate limiting
+// Rate limiting (relaxed for development)
 const limiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1 minute
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'), // 1000 requests per minute for dev
     message: 'Too many requests from this IP, please try again later.',
+    skip: () => process.env.NODE_ENV === 'development', // Skip rate limiting in development
 });
 
 // Middleware
@@ -64,8 +65,14 @@ app.use('/api/student/courses', studentCoursesRoutes);
 // Admin routes
 import adminDashboardRoutes from './routes/admin/dashboard';
 import adminUserRoutes from './routes/admin/users';
+import adminCourseRoutes from './routes/admin/courses';
+import adminDepartmentRoutes from './routes/admin/departments';
+import adminEventRoutes from './routes/admin/events';
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/admin/courses', adminCourseRoutes);
+app.use('/api/admin/departments', adminDepartmentRoutes);
+app.use('/api/admin/events', adminEventRoutes);
 
 // 404 handler
 app.use('*', (_req: Request, res: Response) => {
