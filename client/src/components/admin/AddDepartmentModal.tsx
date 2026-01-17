@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Building2, User, Save } from 'lucide-react';
 
 interface AddDepartmentModalProps {
@@ -7,12 +7,28 @@ interface AddDepartmentModalProps {
     onAdd: (department: any) => void;
 }
 
-const AddDepartmentModal = ({ isOpen, onClose, onAdd }: AddDepartmentModalProps) => {
+const AddDepartmentModal = ({ isOpen, onClose, onAdd, initialData }: AddDepartmentModalProps & { initialData?: any }) => {
     const [formData, setFormData] = useState({
         name: '',
         head: '',
         description: ''
     });
+
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                name: initialData.name || '',
+                head: initialData.head || '',
+                description: initialData.description || ''
+            });
+        } else {
+            setFormData({
+                name: '',
+                head: '',
+                description: ''
+            });
+        }
+    }, [initialData, isOpen]);
 
     if (!isOpen) return null;
 
@@ -20,16 +36,11 @@ const AddDepartmentModal = ({ isOpen, onClose, onAdd }: AddDepartmentModalProps)
         e.preventDefault();
         onAdd({
             ...formData,
-            courses: 0,
-            students: 0,
-            lecturers: 0
+            courses: initialData ? initialData.courses : 0,
+            students: initialData ? initialData.students : 0,
+            lecturers: initialData ? initialData.lecturers : 0
         });
         onClose();
-        setFormData({
-            name: '',
-            head: '',
-            description: ''
-        });
     };
 
     return (
@@ -38,8 +49,12 @@ const AddDepartmentModal = ({ isOpen, onClose, onAdd }: AddDepartmentModalProps)
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add New Department</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Create a new academic department</p>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                            {initialData ? 'Edit Department' : 'Add New Department'}
+                        </h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            {initialData ? 'Update department details' : 'Create a new academic department'}
+                        </p>
                     </div>
                     <button
                         onClick={onClose}
@@ -107,7 +122,7 @@ const AddDepartmentModal = ({ isOpen, onClose, onAdd }: AddDepartmentModalProps)
                             className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-lg shadow-indigo-200 dark:shadow-none"
                         >
                             <Save className="w-4 h-4" />
-                            Create Department
+                            {initialData ? 'Update Department' : 'Create Department'}
                         </button>
                     </div>
                 </form>

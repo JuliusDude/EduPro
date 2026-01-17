@@ -1,75 +1,53 @@
+import { useState, useEffect } from 'react';
 import { Users, BookOpen, Building2, Activity, TrendingUp, Calendar } from 'lucide-react';
+import api from '../../services/api';
 
 const AdminDashboard = () => {
-    const stats = [
-        {
-            title: 'Total Users',
-            value: '2,543',
-            change: '+12%',
-            trend: 'up',
-            icon: Users,
-            color: 'blue'
-        },
-        {
-            title: 'Total Courses',
-            value: '48',
-            change: '+4%',
-            trend: 'up',
-            icon: BookOpen,
-            color: 'indigo'
-        },
-        {
-            title: 'Departments',
-            value: '8',
-            change: '0%',
-            trend: 'neutral',
-            icon: Building2,
-            color: 'purple'
-        },
-        {
-            title: 'System Activity',
-            value: '98%',
-            change: '+2%',
-            trend: 'up',
-            icon: Activity,
-            color: 'emerald'
-        }
-    ];
+    const [stats, setStats] = useState<any[]>([]);
+    const [recentActivity, setRecentActivity] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const recentActivity = [
-        {
-            id: 1,
-            user: 'John Doe',
-            action: 'Created new course',
-            target: 'Advanced Web Development',
-            time: '2 hours ago',
-            type: 'course'
-        },
-        {
-            id: 2,
-            user: 'Sarah Smith',
-            action: 'Updated department details',
-            target: 'Computer Science',
-            time: '4 hours ago',
-            type: 'department'
-        },
-        {
-            id: 3,
-            user: 'System',
-            action: 'Automated backup completed',
-            target: 'Database',
-            time: '6 hours ago',
-            type: 'system'
-        },
-        {
-            id: 4,
-            user: 'Mike Johnson',
-            action: 'Registered new student batch',
-            target: 'Batch 2024',
-            time: '1 day ago',
-            type: 'user'
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const response = await api.get('/admin/dashboard');
+                const data = response.data.data;
+
+                // Map icon strings to components
+                const mappedStats = data.stats.map((stat: any) => ({
+                    ...stat,
+                    icon: getIconComponent(stat.icon)
+                }));
+
+                setStats(mappedStats);
+                setRecentActivity(data.recentActivity);
+            } catch (error) {
+                console.error('Failed to fetch dashboard data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    const getIconComponent = (iconName: string) => {
+        switch (iconName) {
+            case 'Users': return Users;
+            case 'BookOpen': return BookOpen;
+            case 'Building2': return Building2;
+            case 'Activity': return Activity;
+            default: return Activity;
         }
-    ];
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -88,8 +66,8 @@ const AdminDashboard = () => {
                                 <stat.icon className="w-6 h-6" />
                             </div>
                             <span className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${stat.trend === 'up'
-                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
-                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                 }`}>
                                 {stat.trend === 'up' && <TrendingUp className="w-3 h-3 mr-1" />}
                                 {stat.change}
@@ -112,9 +90,9 @@ const AdminDashboard = () => {
                         {recentActivity.map((activity) => (
                             <div key={activity.id} className="flex items-start gap-4">
                                 <div className={`p-2 rounded-full shrink-0 ${activity.type === 'course' ? 'bg-indigo-50 text-indigo-600' :
-                                        activity.type === 'department' ? 'bg-purple-50 text-purple-600' :
-                                            activity.type === 'system' ? 'bg-slate-100 text-slate-600' :
-                                                'bg-blue-50 text-blue-600'
+                                    activity.type === 'department' ? 'bg-purple-50 text-purple-600' :
+                                        activity.type === 'system' ? 'bg-slate-100 text-slate-600' :
+                                            'bg-blue-50 text-blue-600'
                                     } dark:bg-slate-800 dark:text-slate-400`}>
                                     {activity.type === 'course' && <BookOpen className="w-4 h-4" />}
                                     {activity.type === 'department' && <Building2 className="w-4 h-4" />}
@@ -126,7 +104,7 @@ const AdminDashboard = () => {
                                         {activity.user} <span className="text-slate-500 font-normal">{activity.action}</span>
                                     </p>
                                     <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-0.5">{activity.target}</p>
-                                    <p className="text-xs text-slate-400 mt-1">{activity.time}</p>
+                                    <p className="text-xs text-slate-400 mt-1">{new Date(activity.time).toLocaleString()}</p>
                                 </div>
                             </div>
                         ))}

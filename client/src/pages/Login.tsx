@@ -28,7 +28,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password, selectedRole);
+      const success = await login(email, password);
 
       if (success) {
         // Navigate based on role

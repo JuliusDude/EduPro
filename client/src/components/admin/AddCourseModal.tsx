@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, BookOpen, Building2, Calendar, Clock, Save, Hash } from 'lucide-react';
 
 interface AddCourseModalProps {
@@ -7,7 +7,7 @@ interface AddCourseModalProps {
     onAdd: (course: any) => void;
 }
 
-const AddCourseModal = ({ isOpen, onClose, onAdd }: AddCourseModalProps) => {
+const AddCourseModal = ({ isOpen, onClose, onAdd, initialData }: AddCourseModalProps & { initialData?: any }) => {
     const [formData, setFormData] = useState({
         name: '',
         code: '',
@@ -17,24 +17,38 @@ const AddCourseModal = ({ isOpen, onClose, onAdd }: AddCourseModalProps) => {
         lecturer: ''
     });
 
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                name: initialData.name || '',
+                code: initialData.code || '',
+                department: initialData.department || '',
+                credits: initialData.credits ? String(initialData.credits) : '3',
+                semester: initialData.semester || 'Fall 2024',
+                lecturer: initialData.lecturer || ''
+            });
+        } else {
+            setFormData({
+                name: '',
+                code: '',
+                department: '',
+                credits: '3',
+                semester: 'Fall 2024',
+                lecturer: ''
+            });
+        }
+    }, [initialData, isOpen]);
+
     if (!isOpen) return null;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onAdd({
             ...formData,
-            students: 0,
-            status: 'active'
+            students: initialData ? initialData.students : 0,
+            status: initialData ? initialData.status : 'active'
         });
         onClose();
-        setFormData({
-            name: '',
-            code: '',
-            department: '',
-            credits: '3',
-            semester: 'Fall 2024',
-            lecturer: ''
-        });
     };
 
     return (
@@ -43,8 +57,12 @@ const AddCourseModal = ({ isOpen, onClose, onAdd }: AddCourseModalProps) => {
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Course</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Add a new academic course to the system</p>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                            {initialData ? 'Edit Course' : 'Create New Course'}
+                        </h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            {initialData ? 'Update course details' : 'Add a new academic course to the system'}
+                        </p>
                     </div>
                     <button
                         onClick={onClose}
@@ -154,7 +172,7 @@ const AddCourseModal = ({ isOpen, onClose, onAdd }: AddCourseModalProps) => {
                             className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-lg shadow-indigo-200 dark:shadow-none"
                         >
                             <Save className="w-4 h-4" />
-                            Create Course
+                            {initialData ? 'Update Course' : 'Create Course'}
                         </button>
                     </div>
                 </form>

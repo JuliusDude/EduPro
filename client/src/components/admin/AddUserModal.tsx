@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, User, Mail, Shield, Building2, Save } from 'lucide-react';
 
 interface AddUserModalProps {
@@ -7,15 +7,41 @@ interface AddUserModalProps {
     onAdd: (user: any) => void;
 }
 
-const AddUserModal = ({ isOpen, onClose, onAdd }: AddUserModalProps) => {
+const AddUserModal = ({ isOpen, onClose, onAdd, initialData }: AddUserModalProps & { initialData?: any }) => {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
         email: '',
+        password: '',
         role: 'student',
         department: '',
         studentId: ''
     });
+
+    useEffect(() => {
+        if (initialData) {
+            const [firstName, lastName] = initialData.name.split(' ');
+            setFormData({
+                firstName: firstName || '',
+                lastName: lastName || '',
+                email: initialData.email || '',
+                password: '', // Don't populate password for security
+                role: initialData.role || 'student',
+                department: initialData.department || '',
+                studentId: initialData.studentId || ''
+            });
+        } else {
+            setFormData({
+                firstName: '',
+                lastName: '',
+                email: '',
+                password: '',
+                role: 'student',
+                department: '',
+                studentId: ''
+            });
+        }
+    }, [initialData, isOpen]);
 
     if (!isOpen) return null;
 
@@ -24,18 +50,10 @@ const AddUserModal = ({ isOpen, onClose, onAdd }: AddUserModalProps) => {
         onAdd({
             ...formData,
             name: `${formData.firstName} ${formData.lastName}`,
-            status: 'active',
-            joinDate: new Date().toISOString()
+            status: initialData ? initialData.status : 'active',
+            joinDate: initialData ? initialData.joinDate : new Date().toISOString()
         });
         onClose();
-        setFormData({
-            firstName: '',
-            lastName: '',
-            email: '',
-            role: 'student',
-            department: '',
-            studentId: ''
-        });
     };
 
     return (
@@ -44,8 +62,12 @@ const AddUserModal = ({ isOpen, onClose, onAdd }: AddUserModalProps) => {
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add New User</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Create a new account for student or staff</p>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                            {initialData ? 'Edit User' : 'Add New User'}
+                        </h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            {initialData ? 'Update user details' : 'Create a new account for student or staff'}
+                        </p>
                     </div>
                     <button
                         onClick={onClose}
@@ -96,6 +118,23 @@ const AddUserModal = ({ isOpen, onClose, onAdd }: AddUserModalProps) => {
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"
                                 placeholder="john.doe@edu.com"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            {initialData ? 'New Password (leave blank to keep current)' : 'Password'}
+                        </label>
+                        <div className="relative">
+                            <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                type="password"
+                                required={!initialData}
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"
+                                placeholder={initialData ? "••••••••" : "Enter password"}
                             />
                         </div>
                     </div>
@@ -162,7 +201,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd }: AddUserModalProps) => {
                             className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-lg shadow-indigo-200 dark:shadow-none"
                         >
                             <Save className="w-4 h-4" />
-                            Create User
+                            {initialData ? 'Update User' : 'Create User'}
                         </button>
                     </div>
                 </form>

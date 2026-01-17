@@ -1,59 +1,80 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Plus, MoreVertical, Mail, Phone, Shield, Trash2, Edit2, CheckCircle, XCircle } from 'lucide-react';
 import AddUserModal from '../../components/admin/AddUserModal';
+import api from '../../services/api';
 
 const AdminUsers = () => {
     const [activeTab, setActiveTab] = useState<'all' | 'student' | 'lecturer' | 'admin'>('all');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    const [users, setUsers] = useState([
-        {
-            id: 1,
-            name: 'John Doe',
-            email: 'john.doe@edupro.com',
-            role: 'student',
-            status: 'active',
-            department: 'Computer Science',
-            joinDate: '2024-01-15'
-        },
-        {
-            id: 2,
-            name: 'Dr. Sarah Smith',
-            email: 'sarah.smith@edupro.com',
-            role: 'lecturer',
-            status: 'active',
-            department: 'Computer Science',
-            joinDate: '2023-08-20'
-        },
-        {
-            id: 3,
-            name: 'Admin User',
-            email: 'admin@edupro.com',
-            role: 'admin',
-            status: 'active',
-            department: 'Administration',
-            joinDate: '2023-01-01'
-        },
-        {
-            id: 4,
-            name: 'Jane Wilson',
-            email: 'jane.wilson@edupro.com',
-            role: 'student',
-            status: 'inactive',
-            department: 'Mathematics',
-            joinDate: '2024-02-01'
-        }
-    ]);
+    const [users, setUsers] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [editingUser, setEditingUser] = useState<any>(null);
 
-    const handleAddUser = (newUser: any) => {
-        const user = {
-            id: users.length + 1,
-            ...newUser
-        };
-        setUsers([user, ...users]);
+    const fetchUsers = async () => {
+        setIsLoading(true);
+        try {
+            const response = await api.get('/admin/users', {
+                params: { role: activeTab === 'all' ? undefined : activeTab.toUpperCase() }
+            });
+            // Normalize data for the table
+            const normalizedUsers = response.data.data.users.map((u: any) => ({
+                id: u.id,
+                name: `${u.firstName} ${u.lastName}`,
+                email: u.email,
+                role: u.role.toLowerCase(),
+                status: u.status.toLowerCase(),
+                department: u.department || 'N/A',
+                joinDate: u.createdAt
+            }));
+            setUsers(normalizedUsers);
+        } catch (error) {
+            console.error('Failed to fetch users:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const filteredUsers = activeTab === 'all' ? users : users.filter(user => user.role === activeTab);
+    useEffect(() => {
+        fetchUsers();
+    }, [activeTab]);
+
+    const handleAddUser = async (userData: any) => {
+        try {
+            if (editingUser) {
+                await api.put(`/admin/users/${editingUser.id}`, {
+                    ...userData,
+                    role: userData.role.toUpperCase(),
+                    status: userData.status.toUpperCase()
+                });
+            } else {
+                await api.post('/admin/users', {
+                    ...userData,
+                    role: userData.role.toUpperCase()
+                });
+            }
+            fetchUsers();
+            handleCloseModal();
+        } catch (error) {
+            console.error('Failed to save user:', error);
+        }
+    };
+
+    const handleDeleteUser = async (id: string) => {
+        if (window.confirm('Are you sure you want to delete this user?')) {
+            try {
+                await api.delete(`/admin/users/${id}`);
+                fetchUsers();
+            } catch (error) {
+                console.error('Failed to delete user:', error);
+            }
+        }
+    };
+
+    const handleCloseModal = () => {
+        setIsAddModalOpen(false);
+        setEditingUser(null);
+    };
 
     return (
         <div className="space-y-6">
@@ -64,7 +85,10 @@ const AdminUsers = () => {
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage system users and permissions</p>
                 </div>
                 <button
-                    onClick={() => setIsAddModalOpen(true)}
+                    onClick={() => {
+                        setEditingUser(null);
+                        setIsAddModalOpen(true);
+                    }}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none"
                 >
                     <Plus className="w-4 h-4" />
@@ -121,57 +145,80 @@ const AdminUsers = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {filteredUsers.map((user) => (
-                                <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm">
-                                                {user.name.split(' ').map(n => n[0]).join('')}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{user.name}</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                                            ${user.role === 'admin' ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' :
-                                                user.role === 'lecturer' ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' :
-                                                    'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
-                                            }`}>
-                                            {user.role === 'admin' && <Shield className="w-3 h-3" />}
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="text-sm text-slate-600 dark:text-slate-300">{user.department}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            ${user.status === 'active'
-                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
-                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                                            }`}>
-                                            {user.status === 'active' ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                                            <span className="capitalize">{user.status}</span>
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="text-sm text-slate-500 dark:text-slate-400">{new Date(user.joinDate).toLocaleDateString()}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors">
-                                                <Edit2 className="w-4 h-4" />
-                                            </button>
-                                            <button className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-10 text-center text-slate-500">
+                                        Loading users...
                                     </td>
                                 </tr>
-                            ))}
+                            ) : users.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-10 text-center text-slate-500">
+                                        No users found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                users.map((user) => (
+                                    <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm">
+                                                    {user.name.split(' ').map((n: string) => n[0]).join('')}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{user.name}</p>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                                                ${user.role === 'admin' ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' :
+                                                    user.role === 'lecturer' ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' :
+                                                        'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                                                }`}>
+                                                {user.role === 'admin' && <Shield className="w-3 h-3" />}
+                                                {user.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm text-slate-600 dark:text-slate-300">{user.department}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                ${user.status === 'active'
+                                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                                }`}>
+                                                {user.status === 'active' ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                                                <span className="capitalize">{user.status}</span>
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm text-slate-500 dark:text-slate-400">{new Date(user.joinDate).toLocaleDateString()}</span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingUser(user);
+                                                        setIsAddModalOpen(true);
+                                                    }}
+                                                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteUser(user.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -179,8 +226,9 @@ const AdminUsers = () => {
 
             <AddUserModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
+                onClose={handleCloseModal}
                 onAdd={handleAddUser}
+                initialData={editingUser}
             />
         </div>
     );

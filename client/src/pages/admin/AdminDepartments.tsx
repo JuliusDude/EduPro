@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Search, Plus, MoreVertical, Building2, Users, BookOpen, Edit2, Trash2, ArrowRight } from 'lucide-react';
 import AddDepartmentModal from '../../components/admin/AddDepartmentModal';
 
+import DepartmentDetailsModal from '../../components/admin/DepartmentDetailsModal';
+
 const AdminDepartments = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
+    const [activeTab, setActiveTab] = useState('all');
     const [departments, setDepartments] = useState([
         {
             id: 1,
@@ -13,7 +15,7 @@ const AdminDepartments = () => {
             courses: 12,
             students: 450,
             lecturers: 15,
-            description: 'Software Engineering, AI, and Data Science'
+            description: 'The Computer Science department focuses on software engineering, artificial intelligence, and data science.'
         },
         {
             id: 2,
@@ -22,7 +24,7 @@ const AdminDepartments = () => {
             courses: 8,
             students: 320,
             lecturers: 10,
-            description: 'Pure and Applied Mathematics'
+            description: 'Dedicated to pure and applied mathematics, statistics, and computational theories.'
         },
         {
             id: 3,
@@ -31,7 +33,7 @@ const AdminDepartments = () => {
             courses: 10,
             students: 280,
             lecturers: 12,
-            description: 'Theoretical and Experimental Physics'
+            description: 'Exploring the fundamental laws of the universe, from quantum mechanics to astrophysics.'
         },
         {
             id: 4,
@@ -40,16 +42,38 @@ const AdminDepartments = () => {
             courses: 15,
             students: 600,
             lecturers: 20,
-            description: 'Management, Finance, and Marketing'
+            description: 'Preparing future leaders with comprehensive business, management, and economic studies.'
         }
     ]);
 
+    const [editingDepartment, setEditingDepartment] = useState<any>(null);
+    const [viewingDepartment, setViewingDepartment] = useState<any>(null);
+
     const handleAddDepartment = (newDepartment: any) => {
-        const department = {
-            id: departments.length + 1,
-            ...newDepartment
-        };
-        setDepartments([department, ...departments]);
+        if (editingDepartment) {
+            setDepartments(departments.map(d => d.id === editingDepartment.id ? { ...d, ...newDepartment } : d));
+            setEditingDepartment(null);
+        } else {
+            const department = {
+                id: departments.length + 1,
+                ...newDepartment
+            };
+            setDepartments([department, ...departments]);
+        }
+    };
+
+    const handleEditClick = (department: any) => {
+        setEditingDepartment(department);
+        setIsAddModalOpen(true);
+    };
+
+    const handleViewClick = (department: any) => {
+        setViewingDepartment(department);
+    };
+
+    const handleCloseModal = () => {
+        setIsAddModalOpen(false);
+        setEditingDepartment(null);
     };
 
     return (
@@ -61,7 +85,10 @@ const AdminDepartments = () => {
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage academic departments and faculties</p>
                 </div>
                 <button
-                    onClick={() => setIsAddModalOpen(true)}
+                    onClick={() => {
+                        setEditingDepartment(null);
+                        setIsAddModalOpen(true);
+                    }}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none"
                 >
                     <Plus className="w-4 h-4" />
@@ -130,11 +157,17 @@ const AdminDepartments = () => {
                             </div>
 
                             <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium">
+                                <button
+                                    onClick={() => handleEditClick(dept)}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium"
+                                >
                                     <Edit2 className="w-4 h-4" />
                                     Edit
                                 </button>
-                                <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium">
+                                <button
+                                    onClick={() => handleViewClick(dept)}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium"
+                                >
                                     View Details
                                     <ArrowRight className="w-4 h-4" />
                                 </button>
@@ -146,8 +179,15 @@ const AdminDepartments = () => {
 
             <AddDepartmentModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
+                onClose={handleCloseModal}
                 onAdd={handleAddDepartment}
+                initialData={editingDepartment}
+            />
+
+            <DepartmentDetailsModal
+                isOpen={!!viewingDepartment}
+                onClose={() => setViewingDepartment(null)}
+                department={viewingDepartment}
             />
         </div>
     );

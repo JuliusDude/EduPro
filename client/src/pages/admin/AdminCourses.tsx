@@ -53,12 +53,29 @@ const AdminCourses = () => {
         }
     ]);
 
+    const [editingCourse, setEditingCourse] = useState<any>(null);
+
     const handleAddCourse = (newCourse: any) => {
-        const course = {
-            id: courses.length + 1,
-            ...newCourse
-        };
-        setCourses([course, ...courses]);
+        if (editingCourse) {
+            setCourses(courses.map(c => c.id === editingCourse.id ? { ...c, ...newCourse } : c));
+            setEditingCourse(null);
+        } else {
+            const course = {
+                id: courses.length + 1,
+                ...newCourse
+            };
+            setCourses([course, ...courses]);
+        }
+    };
+
+    const handleEditClick = (course: any) => {
+        setEditingCourse(course);
+        setIsAddModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsAddModalOpen(false);
+        setEditingCourse(null);
     };
 
     const filteredCourses = activeTab === 'all' ? courses : courses.filter(course => course.status === activeTab);
@@ -72,7 +89,10 @@ const AdminCourses = () => {
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Create and manage academic courses</p>
                 </div>
                 <button
-                    onClick={() => setIsAddModalOpen(true)}
+                    onClick={() => {
+                        setEditingCourse(null);
+                        setIsAddModalOpen(true);
+                    }}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-sm shadow-indigo-200 dark:shadow-none"
                 >
                     <Plus className="w-4 h-4" />
@@ -162,7 +182,10 @@ const AdminCourses = () => {
                             </div>
 
                             <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium">
+                                <button
+                                    onClick={() => handleEditClick(course)}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium"
+                                >
                                     <Edit2 className="w-4 h-4" />
                                     Edit
                                 </button>
@@ -178,8 +201,9 @@ const AdminCourses = () => {
 
             <AddCourseModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
+                onClose={handleCloseModal}
                 onAdd={handleAddCourse}
+                initialData={editingCourse}
             />
         </div>
     );
