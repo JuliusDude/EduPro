@@ -12,7 +12,7 @@ const AddEventModal = ({ isOpen, onClose, onAdd }: AddEventModalProps) => {
         title: '',
         date: '',
         time: '',
-        type: 'academic',
+        type: 'OTHER',
         location: '',
         description: ''
     });
@@ -27,7 +27,7 @@ const AddEventModal = ({ isOpen, onClose, onAdd }: AddEventModalProps) => {
             title: '',
             date: '',
             time: '',
-            type: 'academic',
+            type: 'OTHER',
             location: '',
             description: ''
         });
@@ -102,10 +102,11 @@ const AddEventModal = ({ isOpen, onClose, onAdd }: AddEventModalProps) => {
                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                             className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all appearance-none"
                         >
-                            <option value="academic">Academic</option>
-                            <option value="exam">Exam</option>
-                            <option value="holiday">Holiday</option>
-                            <option value="meeting">Meeting</option>
+                            <option value="OTHER">Academic</option>
+                            <option value="EXAM">Exam</option>
+                            <option value="HOLIDAY">Holiday</option>
+                            <option value="MEETING">Meeting</option>
+                            <option value="WORKSHOP">Workshop</option>
                         </select>
                     </div>
 

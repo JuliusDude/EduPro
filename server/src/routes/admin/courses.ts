@@ -44,11 +44,11 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
                                 },
                             },
                         },
-                    },
-                },
-                _count: {
-                    select: {
-                        students: true,
+                        enrollments: {
+                            select: {
+                                studentId: true,
+                            },
+                        },
                     },
                 },
             },
@@ -56,23 +56,33 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         });
 
         // Transform data for frontend
-        const transformedCourses = courses.map(course => ({
-            id: course.id,
-            code: course.code,
-            name: course.name,
-            department: course.department.name,
-            departmentId: course.departmentId,
-            semester: course.semester,
-            credits: course.credits,
-            weeks: course.weeks,
-            description: course.description,
-            students: course._count.students,
-            lecturer: course.subjects[0]?.lecturer?.user
-                ? `${course.subjects[0].lecturer.user.firstName} ${course.subjects[0].lecturer.user.lastName}`
-                : 'Unassigned',
-            status: 'active', // Default status since not in schema
-            createdAt: course.createdAt,
-        }));
+        const transformedCourses = courses.map(course => {
+            // Count unique students enrolled in any subject of this course
+            const uniqueStudentIds = new Set<string>();
+            course.subjects.forEach(subject => {
+                subject.enrollments.forEach(enrollment => {
+                    uniqueStudentIds.add(enrollment.studentId);
+                });
+            });
+
+            return {
+                id: course.id,
+                code: course.code,
+                name: course.name,
+                department: course.department.name,
+                departmentId: course.departmentId,
+                semester: course.semester,
+                credits: course.credits,
+                weeks: course.weeks,
+                description: course.description,
+                students: uniqueStudentIds.size,
+                lecturer: course.subjects[0]?.lecturer?.user
+                    ? `${course.subjects[0].lecturer.user.firstName} ${course.subjects[0].lecturer.user.lastName}`
+                    : 'Unassigned',
+                status: 'active',
+                createdAt: course.createdAt,
+            };
+        });
 
         res.json({
             success: true,
@@ -310,6 +320,78 @@ router.delete('/:id/subjects/:subjectId', async (req: Request, res: Response, ne
         res.json({
             success: true,
             message: 'Subject deleted successfully',
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * GET /api/admin/courses/:id/students
+ * Get students enrolled in a specific course
+ */
+router.get('/:id/students', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+
+        const course = await prisma.course.findUnique({
+            where: { id },
+            include: {
+                subjects: {
+                    include: {
+                        enrollments: {
+                            include: {
+                                student: {
+                                    include: {
+                                        user: {
+                                            select: {
+                                                firstName: true,
+                                                lastName: true,
+                                                email: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!course) {
+            throw new NotFoundError('Course not found');
+        }
+
+        // Collect unique students and their enrolled subjects
+        const studentMap = new Map<string, any>();
+
+        course.subjects.forEach(subject => {
+            subject.enrollments.forEach(enrollment => {
+                const studentId = enrollment.student.id;
+                if (!studentMap.has(studentId)) {
+                    studentMap.set(studentId, {
+                        id: enrollment.student.id,
+                        studentId: enrollment.student.studentId,
+                        name: `${enrollment.student.user.firstName} ${enrollment.student.user.lastName}`,
+                        email: enrollment.student.user.email,
+                        currentSemester: enrollment.student.currentSemester,
+                        enrolledSubjects: [],
+                    });
+                }
+                studentMap.get(studentId).enrolledSubjects.push({
+                    subjectId: subject.id,
+                    subjectName: subject.name,
+                    subjectCode: subject.code,
+                });
+            });
+        });
+
+        const students = Array.from(studentMap.values());
+
+        res.json({
+            success: true,
+            data: { students },
         });
     } catch (error) {
         next(error);

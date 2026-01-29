@@ -120,6 +120,7 @@ model Subject {
   totalHours  Int
   semester    Int
   roomNumber  String?
+  syllabusCompleted Boolean @default(false)
 
   enrollments Enrollment[]
   assignments Assignment[]

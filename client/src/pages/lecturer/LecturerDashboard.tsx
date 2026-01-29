@@ -1,22 +1,50 @@
-import { BookOpen, Users, ClipboardCheck, FileText, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { BookOpen, Users, ClipboardCheck, FileText, Calendar, Loader2 } from 'lucide-react';
+import { lecturerApi, type DashboardData } from '../../services/lecturerApi';
 
 const LecturerDashboard = () => {
+    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchDashboard = async () => {
+            try {
+                setLoading(true);
+                const data = await lecturerApi.getDashboard();
+                setDashboardData(data);
+                setError(null);
+            } catch (err: any) {
+                console.error('Failed to fetch dashboard:', err);
+                setError(err.response?.data?.message || 'Failed to load dashboard');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboard();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-2xl">
+                <p>{error}</p>
+            </div>
+        );
+    }
+
     const stats = [
-        { label: 'Courses Teaching', value: '5', icon: BookOpen, color: 'indigo', change: '+1 this semester' },
-        { label: 'Total Students', value: '142', icon: Users, color: 'emerald', change: '5 courses' },
-        { label: 'Pending Grading', value: '23', icon: ClipboardCheck, color: 'amber', change: '3 assignments' }
-    ];
-
-    const recentAssignments = [
-        { course: 'Data Structures', title: 'Lab 4 - Trees', submitted: 28, total: 30, dueDate: '2 days ago' },
-        { course: 'Web Development', title: 'Project 2', submitted: 25, total: 28, dueDate: 'Yesterday' },
-        { course: 'Database Systems', title: 'Normalization', submitted: 22, total: 32, dueDate: 'Today' }
-    ];
-
-    const upcomingClasses = [
-        { course: 'Data Structures', time: '09:00 AM', room: 'Room 301', students: 30 },
-        { course: 'Web Development', time: '11:00 AM', room: 'Lab 3', students: 28 },
-        { course: 'Database Systems', time: '02:00 PM', room: 'Room 201', students: 32 }
+        { label: 'Courses Teaching', value: dashboardData?.stats.totalSubjects || 0, icon: BookOpen, color: 'indigo', change: 'Active subjects' },
+        { label: 'Total Students', value: dashboardData?.stats.totalStudents || 0, icon: Users, color: 'emerald', change: 'Enrolled across subjects' },
+        { label: 'Pending Grading', value: dashboardData?.stats.pendingGrading || 0, icon: ClipboardCheck, color: 'amber', change: 'Submissions to review' }
     ];
 
     return (
@@ -25,7 +53,9 @@ const LecturerDashboard = () => {
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-colors duration-300">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome back, Dr. Wilson!</h1>
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                            Welcome back, Professor!
+                        </h1>
                         <p className="text-slate-500 dark:text-slate-400 mt-1">Here's what's happening with your courses today</p>
                     </div>
                     <Calendar className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
@@ -59,28 +89,34 @@ const LecturerDashboard = () => {
                         <p className="text-sm text-slate-500 dark:text-slate-400">Assignments waiting for review</p>
                     </div>
                     <div className="p-4 space-y-3">
-                        {recentAssignments.map((assignment, index) => (
-                            <div key={index} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                                <div className="flex items-start justify-between mb-2">
-                                    <div>
-                                        <h3 className="font-semibold text-slate-900 dark:text-white">{assignment.title}</h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">{assignment.course}</p>
+                        {dashboardData?.recentAssignments && dashboardData.recentAssignments.length > 0 ? (
+                            dashboardData.recentAssignments.map((assignment) => (
+                                <div key={assignment.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                            <h3 className="font-semibold text-slate-900 dark:text-white">{assignment.title}</h3>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">{assignment.subject}</p>
+                                        </div>
+                                        <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-medium rounded-md">
+                                            {assignment.gradedSubmissions}/{assignment.totalSubmissions}
+                                        </span>
                                     </div>
-                                    <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-medium rounded-md">
-                                        {assignment.submitted}/{assignment.total}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex-1 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                                        <div
-                                            className="bg-indigo-600 dark:bg-indigo-500 h-full rounded-full"
-                                            style={{ width: `${(assignment.submitted / assignment.total) * 100}%` }}
-                                        ></div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                            <div
+                                                className="bg-indigo-600 dark:bg-indigo-500 h-full rounded-full"
+                                                style={{ width: `${assignment.totalSubmissions > 0 ? (assignment.gradedSubmissions / assignment.totalSubmissions) * 100 : 0}%` }}
+                                            ></div>
+                                        </div>
+                                        <span className="ml-3 text-xs text-slate-400">
+                                            Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                                        </span>
                                     </div>
-                                    <span className="ml-3 text-xs text-slate-400">{assignment.dueDate}</span>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            <p className="text-center text-slate-500 dark:text-slate-400 py-4">No assignments yet</p>
+                        )}
                     </div>
                 </div>
 
@@ -91,24 +127,28 @@ const LecturerDashboard = () => {
                         <p className="text-sm text-slate-500 dark:text-slate-400">Your schedule for today</p>
                     </div>
                     <div className="p-4 space-y-3">
-                        {upcomingClasses.map((classItem, index) => (
-                            <div key={index} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h3 className="font-semibold text-slate-900 dark:text-white">{classItem.course}</h3>
-                                    <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{classItem.time}</span>
+                        {dashboardData?.todaySchedule && dashboardData.todaySchedule.length > 0 ? (
+                            dashboardData.todaySchedule.map((classItem) => (
+                                <div key={classItem.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="font-semibold text-slate-900 dark:text-white">{classItem.subject}</h3>
+                                        <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{classItem.time}</span>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                                        <span className="flex items-center gap-1">
+                                            <FileText className="w-3.5 h-3.5" />
+                                            {classItem.room || 'TBA'}
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                            <Users className="w-3.5 h-3.5" />
+                                            {classItem.course}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                                    <span className="flex items-center gap-1">
-                                        <FileText className="w-3.5 h-3.5" />
-                                        {classItem.room}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <Users className="w-3.5 h-3.5" />
-                                        {classItem.students} students
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            <p className="text-center text-slate-500 dark:text-slate-400 py-4">No classes scheduled for today</p>
+                        )}
                     </div>
                 </div>
             </div>

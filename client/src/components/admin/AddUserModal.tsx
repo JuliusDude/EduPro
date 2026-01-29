@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, User, Mail, Shield, Building2, Save } from 'lucide-react';
+import api from '../../services/api';
 
 interface AddUserModalProps {
     isOpen: boolean;
@@ -13,21 +14,37 @@ const AddUserModal = ({ isOpen, onClose, onAdd, initialData }: AddUserModalProps
         lastName: '',
         email: '',
         password: '',
-        role: 'student',
-        department: '',
+        role: 'STUDENT',
+        departmentId: '',
+        semester: '1',
         studentId: ''
     });
+    const [departments, setDepartments] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const response = await api.get('/admin/departments');
+                setDepartments(response.data.data.departments);
+            } catch (error) {
+                console.error('Failed to fetch departments:', error);
+            }
+        };
+        fetchDepartments();
+    }, []);
 
     useEffect(() => {
         if (initialData) {
             const [firstName, lastName] = initialData.name.split(' ');
+            const dept = departments.find(d => d.name === initialData.department);
             setFormData({
                 firstName: firstName || '',
                 lastName: lastName || '',
                 email: initialData.email || '',
-                password: '', // Don't populate password for security
-                role: initialData.role || 'student',
-                department: initialData.department || '',
+                password: '',
+                role: initialData.role ? initialData.role.toUpperCase() : 'STUDENT',
+                departmentId: initialData.departmentId || dept?.id || '',
+                semester: initialData.semester?.toString() || '1',
                 studentId: initialData.studentId || ''
             });
         } else {
@@ -36,12 +53,13 @@ const AddUserModal = ({ isOpen, onClose, onAdd, initialData }: AddUserModalProps
                 lastName: '',
                 email: '',
                 password: '',
-                role: 'student',
-                department: '',
+                role: 'STUDENT',
+                departmentId: '',
+                semester: '1',
                 studentId: ''
             });
         }
-    }, [initialData, isOpen]);
+    }, [initialData, isOpen, departments]);
 
     if (!isOpen) return null;
 
@@ -50,7 +68,7 @@ const AddUserModal = ({ isOpen, onClose, onAdd, initialData }: AddUserModalProps
         onAdd({
             ...formData,
             name: `${formData.firstName} ${formData.lastName}`,
-            status: initialData ? initialData.status : 'active',
+            status: initialData ? initialData.status : 'ACTIVE',
             joinDate: initialData ? initialData.joinDate : new Date().toISOString()
         });
         onClose();
@@ -149,9 +167,9 @@ const AddUserModal = ({ isOpen, onClose, onAdd, initialData }: AddUserModalProps
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                     className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all appearance-none"
                                 >
-                                    <option value="student">Student</option>
-                                    <option value="lecturer">Lecturer</option>
-                                    <option value="admin">Admin</option>
+                                    <option value="STUDENT">Student</option>
+                                    <option value="LECTURER">Lecturer</option>
+                                    <option value="ADMIN">Admin</option>
                                 </select>
                             </div>
                         </div>
@@ -160,30 +178,43 @@ const AddUserModal = ({ isOpen, onClose, onAdd, initialData }: AddUserModalProps
                             <div className="relative">
                                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <select
-                                    value={formData.department}
-                                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                    value={formData.departmentId}
+                                    onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
                                     className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all appearance-none"
                                 >
                                     <option value="">Select Dept</option>
-                                    <option value="Computer Science">Computer Science</option>
-                                    <option value="Mathematics">Mathematics</option>
-                                    <option value="Physics">Physics</option>
-                                    <option value="Business">Business</option>
+                                    {departments.map((dept) => (
+                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    {formData.role === 'student' && (
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Student ID</label>
-                            <input
-                                type="text"
-                                value={formData.studentId}
-                                onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"
-                                placeholder="e.g., S2024001"
-                            />
+                    {formData.role === 'STUDENT' && (
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Semester</label>
+                                <select
+                                    value={formData.semester}
+                                    onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all appearance-none"
+                                >
+                                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                                        <option key={sem} value={sem}>Semester {sem}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Student ID</label>
+                                <input
+                                    type="text"
+                                    value={formData.studentId}
+                                    onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"
+                                    placeholder="e.g., S2024001"
+                                />
+                            </div>
                         </div>
                     )}
 

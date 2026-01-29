@@ -1,64 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, MoreVertical, Building2, Users, BookOpen, Edit2, Trash2, ArrowRight } from 'lucide-react';
 import AddDepartmentModal from '../../components/admin/AddDepartmentModal';
-
 import DepartmentDetailsModal from '../../components/admin/DepartmentDetailsModal';
+import api from '../../services/api';
 
 const AdminDepartments = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
-    const [departments, setDepartments] = useState([
-        {
-            id: 1,
-            name: 'Computer Science',
-            head: 'Dr. Alan Turing',
-            courses: 12,
-            students: 450,
-            lecturers: 15,
-            description: 'The Computer Science department focuses on software engineering, artificial intelligence, and data science.'
-        },
-        {
-            id: 2,
-            name: 'Mathematics',
-            head: 'Dr. Katherine Johnson',
-            courses: 8,
-            students: 320,
-            lecturers: 10,
-            description: 'Dedicated to pure and applied mathematics, statistics, and computational theories.'
-        },
-        {
-            id: 3,
-            name: 'Physics',
-            head: 'Dr. Richard Feynman',
-            courses: 10,
-            students: 280,
-            lecturers: 12,
-            description: 'Exploring the fundamental laws of the universe, from quantum mechanics to astrophysics.'
-        },
-        {
-            id: 4,
-            name: 'Business Administration',
-            head: 'Dr. Peter Drucker',
-            courses: 15,
-            students: 600,
-            lecturers: 20,
-            description: 'Preparing future leaders with comprehensive business, management, and economic studies.'
-        }
-    ]);
-
+    const [departments, setDepartments] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [editingDepartment, setEditingDepartment] = useState<any>(null);
     const [viewingDepartment, setViewingDepartment] = useState<any>(null);
 
-    const handleAddDepartment = (newDepartment: any) => {
-        if (editingDepartment) {
-            setDepartments(departments.map(d => d.id === editingDepartment.id ? { ...d, ...newDepartment } : d));
-            setEditingDepartment(null);
-        } else {
-            const department = {
-                id: departments.length + 1,
-                ...newDepartment
-            };
-            setDepartments([department, ...departments]);
+    const fetchDepartments = async () => {
+        setIsLoading(true);
+        try {
+            const response = await api.get('/admin/departments');
+            // Transform to match frontend expectations
+            const depts = response.data.data.departments.map((d: any) => ({
+                id: d.id,
+                name: d.name,
+                code: d.code,
+                head: d.head,
+                description: d.description,
+                courses: d.coursesCount || 0,
+                lecturers: d.lecturersCount || 0,
+                students: 0, // Not tracked at department level currently
+            }));
+            setDepartments(depts);
+        } catch (error) {
+            console.error('Failed to fetch departments:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDepartments();
+    }, []);
+
+    const handleAddDepartment = async (deptData: any) => {
+        try {
+            if (editingDepartment) {
+                await api.put(`/admin/departments/${editingDepartment.id}`, {
+                    name: deptData.name,
+                    code: deptData.code,
+                    headOfDepartment: deptData.head,
+                    description: deptData.description,
+                });
+            } else {
+                await api.post('/admin/departments', {
+                    name: deptData.name,
+                    code: deptData.code,
+                    headOfDepartment: deptData.head,
+                    description: deptData.description,
+                });
+            }
+            fetchDepartments();
+            handleCloseModal();
+        } catch (error) {
+            console.error('Failed to save department:', error);
+        }
+    };
+
+    const handleDeleteDepartment = async (id: string) => {
+        if (window.confirm('Are you sure you want to delete this department?')) {
+            try {
+                await api.delete(`/admin/departments/${id}`);
+                fetchDepartments();
+            } catch (error: any) {
+                alert(error.response?.data?.message || 'Failed to delete department');
+            }
         }
     };
 

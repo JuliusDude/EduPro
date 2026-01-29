@@ -5,12 +5,13 @@ interface CreateAssignmentModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (assignment: any) => void;
+    courses?: { id: string; name: string; code: string }[];
 }
 
-const CreateAssignmentModal = ({ isOpen, onClose, onSave }: CreateAssignmentModalProps) => {
+const CreateAssignmentModal = ({ isOpen, onClose, onSave, courses = [] }: CreateAssignmentModalProps) => {
     const [formData, setFormData] = useState({
         title: '',
-        course: '',
+        courseId: '',
         dueDate: '',
         totalPoints: 100,
         description: '',
@@ -67,17 +68,18 @@ const CreateAssignmentModal = ({ isOpen, onClose, onSave }: CreateAssignmentModa
                                 <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <select
                                     required
-                                    value={formData.course}
-                                    onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+                                    value={formData.courseId}
+                                    onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                                     className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all appearance-none"
                                 >
                                     <option value="">Select Course</option>
-                                    <option value="CS-301">CS-301: Data Structures</option>
-                                    <option value="CS-302">CS-302: Web Development</option>
-                                    <option value="CS-303">CS-303: Database Systems</option>
+                                    {courses.map(course => (
+                                        <option key={course.id} value={course.id}>{course.code}: {course.name}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
+
 
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Due Date</label>

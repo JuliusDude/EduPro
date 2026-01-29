@@ -74,6 +74,20 @@ app.use('/api/admin/courses', adminCourseRoutes);
 app.use('/api/admin/departments', adminDepartmentRoutes);
 app.use('/api/admin/events', adminEventRoutes);
 
+// Lecturer routes
+import lecturerDashboardRoutes from './routes/lecturer/dashboard';
+import lecturerSubjectsRoutes from './routes/lecturer/subjects';
+import lecturerAttendanceRoutes from './routes/lecturer/attendance';
+import lecturerAssignmentsRoutes from './routes/lecturer/assignments';
+import lecturerStudentsRoutes from './routes/lecturer/students';
+import lecturerTimetableRoutes from './routes/lecturer/timetable';
+app.use('/api/lecturer/dashboard', lecturerDashboardRoutes);
+app.use('/api/lecturer/subjects', lecturerSubjectsRoutes);
+app.use('/api/lecturer/attendance', lecturerAttendanceRoutes);
+app.use('/api/lecturer/assignments', lecturerAssignmentsRoutes);
+app.use('/api/lecturer/students', lecturerStudentsRoutes);
+app.use('/api/lecturer/timetable', lecturerTimetableRoutes);
+
 // 404 handler
 app.use('*', (_req: Request, res: Response) => {
     res.status(404).json({

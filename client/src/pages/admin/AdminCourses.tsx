@@ -1,70 +1,60 @@
-import { useState } from 'react';
-import { Search, Filter, Plus, MoreVertical, BookOpen, Users, Calendar, Clock, Edit2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Filter, Plus, MoreVertical, BookOpen, Users, Calendar, Clock, Edit2, Trash2, UserPlus } from 'lucide-react';
 import AddCourseModal from '../../components/admin/AddCourseModal';
+import ManageLecturersModal from '../../components/admin/ManageLecturersModal';
+import ViewStudentsModal from '../../components/admin/ViewStudentsModal';
+import api from '../../services/api';
 
 const AdminCourses = () => {
     const [activeTab, setActiveTab] = useState<'all' | 'active' | 'archived'>('all');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-    const [courses, setCourses] = useState([
-        {
-            id: 1,
-            code: 'CS-301',
-            name: 'Advanced Data Structures',
-            department: 'Computer Science',
-            lecturer: 'Dr. Sarah Smith',
-            students: 45,
-            credits: 4,
-            semester: 'Fall 2024',
-            status: 'active'
-        },
-        {
-            id: 2,
-            code: 'CS-302',
-            name: 'Database Systems',
-            department: 'Computer Science',
-            lecturer: 'Prof. Alan Turing',
-            students: 52,
-            credits: 3,
-            semester: 'Fall 2024',
-            status: 'active'
-        },
-        {
-            id: 3,
-            code: 'ENG-101',
-            name: 'Technical Writing',
-            department: 'English',
-            lecturer: 'Ms. Emily Bronte',
-            students: 30,
-            credits: 2,
-            semester: 'Fall 2024',
-            status: 'active'
-        },
-        {
-            id: 4,
-            code: 'CS-201',
-            name: 'Intro to Programming',
-            department: 'Computer Science',
-            lecturer: 'Dr. Sarah Smith',
-            students: 60,
-            credits: 4,
-            semester: 'Spring 2024',
-            status: 'archived'
-        }
-    ]);
-
+    const [courses, setCourses] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [editingCourse, setEditingCourse] = useState<any>(null);
+    const [activeMenu, setActiveMenu] = useState<string | null>(null);
+    const [isManageLecturersModalOpen, setIsManageLecturersModalOpen] = useState(false);
+    const [managingCourse, setManagingCourse] = useState<any>(null);
+    const [isViewStudentsModalOpen, setIsViewStudentsModalOpen] = useState(false);
+    const [viewingCourse, setViewingCourse] = useState<any>(null);
 
-    const handleAddCourse = (newCourse: any) => {
-        if (editingCourse) {
-            setCourses(courses.map(c => c.id === editingCourse.id ? { ...c, ...newCourse } : c));
-            setEditingCourse(null);
-        } else {
-            const course = {
-                id: courses.length + 1,
-                ...newCourse
-            };
-            setCourses([course, ...courses]);
+    const fetchCourses = async () => {
+        setIsLoading(true);
+        try {
+            const response = await api.get('/admin/courses');
+            setCourses(response.data.data.courses);
+        } catch (error) {
+            console.error('Failed to fetch courses:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCourses();
+    }, []);
+
+    const handleAddCourse = async (courseData: any) => {
+        try {
+            if (editingCourse) {
+                await api.put(`/admin/courses/${editingCourse.id}`, courseData);
+            } else {
+                await api.post('/admin/courses', courseData);
+            }
+            fetchCourses();
+            handleCloseModal();
+        } catch (error) {
+            console.error('Failed to save course:', error);
+        }
+    };
+
+    const handleDeleteCourse = async (id: string) => {
+        if (window.confirm('Are you sure you want to delete this course?')) {
+            try {
+                await api.delete(`/admin/courses/${id}`);
+                fetchCourses();
+            } catch (error) {
+                console.error('Failed to delete course:', error);
+            }
         }
     };
 
@@ -150,9 +140,37 @@ const AdminCourses = () => {
                                     </div>
                                 </div>
                                 <div className="relative">
-                                    <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors">
+                                    <button
+                                        onClick={() => setActiveMenu(activeMenu === course.id ? null : course.id)}
+                                        className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                                    >
                                         <MoreVertical className="w-4 h-4" />
                                     </button>
+
+                                    {activeMenu === course.id && (
+                                        <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 z-10 overflow-hidden">
+                                            <button
+                                                onClick={() => {
+                                                    handleEditClick(course);
+                                                    setActiveMenu(null);
+                                                }}
+                                                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                                Edit Course
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    handleDeleteCourse(course.id);
+                                                    setActiveMenu(null);
+                                                }}
+                                                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                Delete Course
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -181,17 +199,26 @@ const AdminCourses = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
                                 <button
-                                    onClick={() => handleEditClick(course)}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium"
+                                    onClick={() => {
+                                        setViewingCourse(course);
+                                        setIsViewStudentsModalOpen(true);
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors text-sm font-medium"
                                 >
-                                    <Edit2 className="w-4 h-4" />
-                                    Edit
+                                    <Users className="w-4 h-4" />
+                                    View Students ({course.students})
                                 </button>
-                                <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors text-sm font-medium">
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete
+                                <button
+                                    onClick={() => {
+                                        setManagingCourse(course);
+                                        setIsManageLecturersModalOpen(true);
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors text-sm font-medium"
+                                >
+                                    <UserPlus className="w-4 h-4" />
+                                    Assign & Manage Lecturers
                                 </button>
                             </div>
                         </div>
@@ -204,6 +231,25 @@ const AdminCourses = () => {
                 onClose={handleCloseModal}
                 onAdd={handleAddCourse}
                 initialData={editingCourse}
+            />
+
+            <ManageLecturersModal
+                isOpen={isManageLecturersModalOpen}
+                onClose={() => {
+                    setIsManageLecturersModalOpen(false);
+                    setManagingCourse(null);
+                    fetchCourses();
+                }}
+                course={managingCourse}
+            />
+
+            <ViewStudentsModal
+                isOpen={isViewStudentsModalOpen}
+                onClose={() => {
+                    setIsViewStudentsModalOpen(false);
+                    setViewingCourse(null);
+                }}
+                course={viewingCourse}
             />
         </div>
     );

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, BookOpen, Building2, Calendar, Clock, Save, Hash } from 'lucide-react';
+import api from '../../services/api';
 
 interface AddCourseModalProps {
     isOpen: boolean;
@@ -11,30 +12,46 @@ const AddCourseModal = ({ isOpen, onClose, onAdd, initialData }: AddCourseModalP
     const [formData, setFormData] = useState({
         name: '',
         code: '',
-        department: '',
+        departmentId: '',
         credits: '3',
-        semester: 'Fall 2024',
-        lecturer: ''
+        semester: '1',
+        description: ''
     });
+    const [departments, setDepartments] = useState<any[]>([]);
+
+    useEffect(() => {
+        // Fetch departments for the dropdown
+        const fetchDepartments = async () => {
+            try {
+                const response = await api.get('/admin/departments');
+                setDepartments(response.data.data.departments);
+            } catch (error) {
+                console.error('Failed to fetch departments:', error);
+            }
+        };
+        if (isOpen) {
+            fetchDepartments();
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         if (initialData) {
             setFormData({
                 name: initialData.name || '',
                 code: initialData.code || '',
-                department: initialData.department || '',
+                departmentId: initialData.departmentId || '',
                 credits: initialData.credits ? String(initialData.credits) : '3',
-                semester: initialData.semester || 'Fall 2024',
-                lecturer: initialData.lecturer || ''
+                semester: initialData.semester ? String(initialData.semester) : '1',
+                description: initialData.description || ''
             });
         } else {
             setFormData({
                 name: '',
                 code: '',
-                department: '',
+                departmentId: '',
                 credits: '3',
-                semester: 'Fall 2024',
-                lecturer: ''
+                semester: '1',
+                description: ''
             });
         }
     }, [initialData, isOpen]);
@@ -45,10 +62,9 @@ const AddCourseModal = ({ isOpen, onClose, onAdd, initialData }: AddCourseModalP
         e.preventDefault();
         onAdd({
             ...formData,
-            students: initialData ? initialData.students : 0,
-            status: initialData ? initialData.status : 'active'
+            credits: parseInt(formData.credits),
+            semester: parseInt(formData.semester)
         });
-        onClose();
     };
 
     return (
@@ -128,16 +144,14 @@ const AddCourseModal = ({ isOpen, onClose, onAdd, initialData }: AddCourseModalP
                             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <select
                                 required
-                                value={formData.department}
-                                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                value={formData.departmentId}
+                                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
                                 className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all appearance-none"
                             >
                                 <option value="">Select Department</option>
-                                <option value="Computer Science">Computer Science</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Physics">Physics</option>
-                                <option value="Business">Business</option>
-                                <option value="English">English</option>
+                                {departments.map((dept) => (
+                                    <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                ))}
                             </select>
                         </div>
                     </div>
@@ -151,9 +165,14 @@ const AddCourseModal = ({ isOpen, onClose, onAdd, initialData }: AddCourseModalP
                                 onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
                                 className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all appearance-none"
                             >
-                                <option value="Fall 2024">Fall 2024</option>
-                                <option value="Spring 2025">Spring 2025</option>
-                                <option value="Summer 2025">Summer 2025</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                                <option value="3">Semester 3</option>
+                                <option value="4">Semester 4</option>
+                                <option value="5">Semester 5</option>
+                                <option value="6">Semester 6</option>
+                                <option value="7">Semester 7</option>
+                                <option value="8">Semester 8</option>
                             </select>
                         </div>
                     </div>

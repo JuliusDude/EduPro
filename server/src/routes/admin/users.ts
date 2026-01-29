@@ -243,24 +243,91 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
-        const { firstName, lastName, role, department, status, phone } = req.body;
+        const { firstName, lastName, role, departmentId, status, phone, semester } = req.body;
 
-        const user = await prisma.user.update({
-            where: { id },
-            data: {
-                firstName,
-                lastName,
-                role,
-                department,
-                status,
-                phone,
-            },
+        // Find department name if ID provided
+        let departmentName = '';
+        if (departmentId) {
+            const dept = await prisma.department.findUnique({ where: { id: departmentId } });
+            if (dept) departmentName = dept.name;
+        }
+
+        const result = await prisma.$transaction(async (prisma) => {
+            const user = await prisma.user.update({
+                where: { id },
+                data: {
+                    firstName,
+                    lastName,
+                    role,
+                    department: departmentName || undefined,
+                    status,
+                    phone,
+                },
+                include: {
+                    student: true,
+                },
+            });
+
+            // If this is a student and semester is being updated
+            if (user.student && semester) {
+                const semesterInt = parseInt(semester);
+                const currentSemester = user.student.currentSemester;
+
+                // Only re-enroll if semester actually changed
+                if (semesterInt !== currentSemester) {
+                    // Update student's current semester
+                    await prisma.student.update({
+                        where: { id: user.student.id },
+                        data: { currentSemester: semesterInt },
+                    });
+
+                    // Delete all existing enrollments
+                    await prisma.enrollment.deleteMany({
+                        where: { studentId: user.student.id },
+                    });
+
+                    // Find courses for new semester and department
+                    const courses = await prisma.course.findMany({
+                        where: {
+                            departmentId: departmentId || undefined,
+                            semester: semesterInt,
+                        },
+                        include: {
+                            subjects: true,
+                        },
+                    });
+
+                    // Create new enrollments
+                    const enrollments = [];
+                    for (const course of courses) {
+                        for (const subject of course.subjects) {
+                            enrollments.push({
+                                studentId: user.student.id,
+                                subjectId: subject.id,
+                                enrollmentDate: new Date(),
+                                status: EnrollmentStatus.ACTIVE,
+                            });
+                        }
+                    }
+
+                    if (enrollments.length > 0) {
+                        await prisma.enrollment.createMany({
+                            data: enrollments,
+                            skipDuplicates: true,
+                        });
+                    }
+
+                    logger.info(`Re-enrolled student ${user.email} from semester ${currentSemester} to ${semesterInt}`);
+                }
+            }
+
+            return user;
         });
 
         res.json({
             success: true,
             message: 'User updated successfully',
-            data: { user },
+            data: { user: result },
         });
     } catch (error) {
         next(error);

@@ -25,7 +25,9 @@ const AdminUsers = () => {
                 role: u.role.toLowerCase(),
                 status: u.status.toLowerCase(),
                 department: u.department || 'N/A',
-                joinDate: u.createdAt
+                joinDate: u.createdAt,
+                semester: u.student?.currentSemester,
+                studentId: u.student?.studentId
             }));
             setUsers(normalizedUsers);
         } catch (error) {

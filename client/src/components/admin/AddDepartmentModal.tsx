@@ -10,6 +10,7 @@ interface AddDepartmentModalProps {
 const AddDepartmentModal = ({ isOpen, onClose, onAdd, initialData }: AddDepartmentModalProps & { initialData?: any }) => {
     const [formData, setFormData] = useState({
         name: '',
+        code: '',
         head: '',
         description: ''
     });
@@ -18,12 +19,14 @@ const AddDepartmentModal = ({ isOpen, onClose, onAdd, initialData }: AddDepartme
         if (initialData) {
             setFormData({
                 name: initialData.name || '',
+                code: initialData.code || '',
                 head: initialData.head || '',
                 description: initialData.description || ''
             });
         } else {
             setFormData({
                 name: '',
+                code: '',
                 head: '',
                 description: ''
             });
@@ -66,17 +69,31 @@ const AddDepartmentModal = ({ isOpen, onClose, onAdd, initialData }: AddDepartme
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Department Name</label>
-                        <div className="relative">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Department Name</label>
+                            <div className="relative">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"
+                                    placeholder="e.g., Computer Science"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Department Code</label>
                             <input
                                 type="text"
                                 required
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"
-                                placeholder="e.g., Computer Science"
+                                value={formData.code}
+                                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all uppercase"
+                                placeholder="e.g., CS"
+                                maxLength={10}
                             />
                         </div>
                     </div>

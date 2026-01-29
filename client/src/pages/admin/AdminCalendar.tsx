@@ -1,48 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Clock, MapPin, MoreVertical } from 'lucide-react';
 import AddEventModal from '../../components/admin/AddEventModal';
+import api from '../../services/api';
 
 const AdminCalendar = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [events, setEvents] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const [events, setEvents] = useState([
-        {
-            id: 1,
-            title: 'Semester Start',
-            date: '2024-09-01',
-            type: 'academic',
-            description: 'Fall Semester 2024 begins'
-        },
-        {
-            id: 2,
-            title: 'Mid-Term Exams',
-            date: '2024-10-15',
-            type: 'exam',
-            description: 'Mid-term examinations for all departments'
-        },
-        {
-            id: 3,
-            title: 'Faculty Meeting',
-            date: '2024-09-10',
-            type: 'meeting',
-            description: 'Monthly all-hands faculty meeting'
-        },
-        {
-            id: 4,
-            title: 'Winter Break',
-            date: '2024-12-20',
-            type: 'holiday',
-            description: 'Winter break starts'
+    const fetchEvents = async () => {
+        setIsLoading(true);
+        try {
+            const response = await api.get('/admin/events');
+            // Transform events for calendar display
+            const transformedEvents = response.data.data.events.map((e: any) => ({
+                id: e.id,
+                title: e.title,
+                date: new Date(e.start).toISOString().split('T')[0],
+                type: e.type,
+                description: e.description,
+                location: e.location,
+            }));
+            setEvents(transformedEvents);
+        } catch (error) {
+            console.error('Failed to fetch events:', error);
+        } finally {
+            setIsLoading(false);
         }
-    ]);
+    };
 
-    const handleAddEvent = (newEvent: any) => {
-        const event = {
-            id: events.length + 1,
-            ...newEvent
-        };
-        setEvents([...events, event]);
+    useEffect(() => {
+        fetchEvents();
+    }, []);
+
+    const handleAddEvent = async (eventData: any) => {
+        try {
+            await api.post('/admin/events', {
+                title: eventData.title,
+                description: eventData.description,
+                eventType: eventData.type,
+                startDate: eventData.date,
+                endDate: eventData.date,
+                location: eventData.location || null,
+                isAllDay: true,
+            });
+            fetchEvents();
+            setIsAddModalOpen(false);
+        } catch (error) {
+            console.error('Failed to create event:', error);
+        }
     };
 
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
